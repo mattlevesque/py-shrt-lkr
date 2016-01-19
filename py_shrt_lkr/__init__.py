@@ -24,5 +24,8 @@ def main(global_config, **settings):
 
 	config.add_route('link_hit', '/{hashids}')
 
+
+	config.add_static_view('deform_static', 'deform:static/')
+
 	config.scan()
 	return config.make_wsgi_app()
