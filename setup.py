@@ -18,6 +18,8 @@ requires = [
     'zope.sqlalchemy',
     'waitress',
     'hashids',
+	'colander',
+	'deform',
 ]
 
 setup(

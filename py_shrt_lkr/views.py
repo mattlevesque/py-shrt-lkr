@@ -1,5 +1,6 @@
 import colander
 import deform.widget
+from pyramid.httpexceptions import HTTPFound
 
 from pyramid.response import Response
 from pyramid.view import view_config
@@ -37,9 +38,15 @@ After you fix the problem, please restart the Pyramid application to
 try it again.
 """
 
+# http://docs.pylonsproject.org/projects/pyramid/en/latest/quick_tutorial/forms.html
 
 class ShortLink(colander.MappingSchema):
 	description = colander.SchemaNode(colander.String())
+	full = colander.SchemaNode(
+		colander.String(),
+		widget=deform.widget.RichTextWidget(delayed_load=True),
+		title='Full frontal description'
+	)
 
 
 class LinkViews(object):
@@ -56,19 +63,33 @@ class LinkViews(object):
 		return self.link_form.get_widget_resources()
 
 	@view_config(route_name='link_hit')
-	def link_hit(self):
+	def hit(self):
 		return Response(status=302, location="http://www.example.com/")
 
 	@view_config(route_name='link_list', renderer='templates/link/list.mako')
-	def link_list(self):
+	def list(self):
 		return {'data': "TEST"}
 
 	@view_config(route_name='link_create', renderer='templates/link/create.mako')
-	def link_create(self):
+	def create(self):
+		print('link:create')
 		form = self.link_form.render()
+
+		print (self.request.params)
+		print('submit' in self.request.POST)
+
+		if 'submit' in self.request.POST:
+			controls = self.request.POST.items()
+			try:
+				print('try')
+				appstruct = self.link_form.validate(controls)
+			except deform.ValidationFailure as e:
+				print('except')
+				return {'test': '<h5>Bad entry... RETRY!!!</h5>', 'form': e.render()}
+			return HTTPFound("/yes-it-validated")
 		return {'test': '<h5>TEST</h5>', 'form': form}
 
 	@view_config(route_name='link_edit', renderer='templates/link/edit.mako')
-	def link_edit(self):
+	def edit(self):
 		id = self.request.matchdict.get('id', None)
 		return {'data': "TEST", 'id': id}
