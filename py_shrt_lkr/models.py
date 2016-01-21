@@ -31,8 +31,9 @@ class MyModel(Base):
 Index('my_index', MyModel.name, unique=True, mysql_length=255)
 
 class Link(Base):
-	__tablename__ = 'links'
-	id = Column(Integer, Sequence('link_id_seq'), primary_key=True)
+	__tablename__ = 'link'
+	#id = Column(Integer, Sequence('link_id_seq'), primary_key=True)
+	id = Column(Integer, primary_key=True)
 	description = Column(String(75))
 	shorty = Column(String(128))
 	url = Column(String(512))

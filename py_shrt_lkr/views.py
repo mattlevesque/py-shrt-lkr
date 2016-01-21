@@ -1,15 +1,23 @@
+import re
+import sqlalchemy
 import colander
 import deform.widget
+import transaction
+import time
 from pyramid.httpexceptions import HTTPFound
+from hashids import Hashids
 
 from pyramid.response import Response
 from pyramid.view import view_config
 
 from sqlalchemy.exc import DBAPIError
 
+from sqlalchemy import Sequence
+
 from .models import (
 	DBSession,
 	MyModel,
+	Link,
 )
 
 
@@ -40,18 +48,29 @@ try it again.
 
 # http://docs.pylonsproject.org/projects/pyramid/en/latest/quick_tutorial/forms.html
 
+# matches an IP, localhost or a domain
+expr_url = re.compile(r"(?i)\b((?:[a-z][\w-]+:(?:/{1,3}|[a-z0-9%])|www\d{0,3}[.]|[a-z0-9.\-]+[.][a-z]{2,4}/)(?:[^\s()<>]+|\(([^\s()<>]+|(\([^\s()<>]+\)))*\))+(?:\(([^\s()<>]+|(\([^\s()<>]+\)))*\)|[^\s`!()\[\]{};:'\".,<>?«»“”‘’]))", re.IGNORECASE)
+
 class ShortLink(colander.MappingSchema):
-	description = colander.SchemaNode(colander.String())
-	full = colander.SchemaNode(
-		colander.String(),
-		widget=deform.widget.RichTextWidget(delayed_load=True),
-		title='Full frontal description'
-	)
+	description = \
+		colander.SchemaNode(
+			colander.String(),
+			validator=colander.Length(min=3, max=50, min_err=u'Shorter than minimum length of ${min}', max_err=u'Longer than maximum length ${max}'),)
+	url = colander.SchemaNode(
+			colander.String(),
+			default="http://",
+			title=u'Url',
+			validator=colander.Regex(
+				expr_url,
+				msg=u"Not valid URL"
+			))
+
 
 
 class LinkViews(object):
 	def __init__(self, request):
 		self.request = request
+		self.hash_gen = Hashids(salt="I fart in your general direction!")
 
 	@property
 	def link_form(self):
@@ -78,15 +97,30 @@ class LinkViews(object):
 		print (self.request.params)
 		print('submit' in self.request.POST)
 
-		if 'submit' in self.request.POST:
-			controls = self.request.POST.items()
+		data = self.request.POST
+		if 'submit' in data:
+			controls = data.items()
 			try:
 				print('try')
 				appstruct = self.link_form.validate(controls)
 			except deform.ValidationFailure as e:
 				print('except')
 				return {'test': '<h5>Bad entry... RETRY!!!</h5>', 'form': e.render()}
-			return HTTPFound("/yes-it-validated")
+			#Save the data
+			model = Link()
+			model.description = data['description']
+			model.url = data['url']
+
+			with transaction.manager as trans:
+				nextId = DBSession.execute(sqlalchemy.func.max(Link.id)).first()[0]+1
+				hashid = self.hash_gen.encode(nextId, int(round(time.time())))
+
+				model.shorty = hashid
+				DBSession.add(model)
+				trans.commit()
+			print(self.request.POST['url'])
+
+			#return HTTPFound(self.request.route_url('link_list'))
 		return {'test': '<h5>TEST</h5>', 'form': form}
 
 	@view_config(route_name='link_edit', renderer='templates/link/edit.mako')
