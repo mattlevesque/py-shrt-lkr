@@ -3,4 +3,6 @@ ${data}
 
 <div>
 <span>ID : </span> ${id}
+
+${form|n}
 </div>

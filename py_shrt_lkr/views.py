@@ -66,6 +66,13 @@ class ShortLink(colander.MappingSchema):
 			))
 
 
+class ShortLinkEdit(ShortLink):
+	short = colander.SchemaNode(
+			colander.String(),
+			title=u'Short'
+		)
+
+
 
 class LinkViews(object):
 	def __init__(self, request):
@@ -73,8 +80,8 @@ class LinkViews(object):
 		self.hash_gen = Hashids(salt="I fart in your general direction!")
 
 	@property
-	def link_form(self):
-		schema = ShortLink()
+	def link_form(self, schema=ShortLink()):
+		#schema = ShortLink()
 		return deform.Form(schema, buttons=('submit',))
 
 	@property
@@ -112,7 +119,10 @@ class LinkViews(object):
 			model.url = data['url']
 
 			with transaction.manager as trans:
-				nextId = DBSession.execute(sqlalchemy.func.max(Link.id)).first()[0]+1
+				maxId=DBSession.execute(sqlalchemy.func.max(Link.id)).first()[0]
+				if maxId is None:
+					maxId=0
+				nextId = maxId+1
 				hashid = self.hash_gen.encode(nextId, int(round(time.time())))
 
 				model.shorty = hashid
@@ -126,4 +136,15 @@ class LinkViews(object):
 	@view_config(route_name='link_edit', renderer='templates/link/edit.mako')
 	def edit(self):
 		id = self.request.matchdict.get('id', None)
-		return {'data': "TEST", 'id': id}
+
+		link = DBSession.query(Link).filter_by(id=id).one()
+
+		schema = ShortLinkEdit()
+		form = deform.Form(schema, buttons=('submit',)).render(
+			{'id':link.id, 'description': link.description, 'url':link.url, 'shorty': ''})
+
+		data = self.request.POST
+		if 'submit' in data:
+			print("Validation???")
+
+		return {'data': "TEST", 'id': id, 'form':form}
