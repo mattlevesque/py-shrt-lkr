@@ -94,7 +94,9 @@ class LinkViews(object):
 
 	@view_config(route_name='link_list', renderer='templates/link/list.mako')
 	def list(self):
-		return {'data': "TEST"}
+		linksLst = DBSession.query(Link)
+
+		return {'linkLst': linksLst}
 
 	@view_config(route_name='link_create', renderer='templates/link/create.mako')
 	def create(self):
@@ -148,3 +150,8 @@ class LinkViews(object):
 			print("Validation???")
 
 		return {'data': "TEST", 'id': id, 'form':form}
+	@view_config(route_name='link_delete')
+	def delete(self):
+		id = self.request.matchdict.get('id', None)
+		print("Deleting "+id+"?")
+		return Response(status=302, location=self.request.route_url("link_list"))

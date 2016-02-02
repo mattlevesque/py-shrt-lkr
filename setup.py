@@ -20,6 +20,7 @@ requires = [
     'hashids',
 	'colander',
 	'deform',
+	'WebHelpers2',
 ]
 
 setup(
