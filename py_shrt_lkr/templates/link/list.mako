@@ -1,4 +1,5 @@
-<h1>Link list!!!</h1>
+<%inherit file="../base/main.mako"/>
+<%block name="title">Link list</%block>
 
 <%def name="buildrow(item, odd=True)">
     %if odd:

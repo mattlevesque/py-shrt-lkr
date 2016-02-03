@@ -1,4 +1,5 @@
-<h1>Edit</h1>
+<%inherit file="../base/main.mako"/>
+<%block name="title">Edit link</%block>
 ${data}
 
 <div>
