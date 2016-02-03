@@ -73,6 +73,7 @@ class ShortLinkEdit(ShortLink):
 		)
 
 
+from sqlalchemy.orm.exc import NoResultFound
 
 class LinkViews(object):
 	def __init__(self, request):
@@ -90,7 +91,19 @@ class LinkViews(object):
 
 	@view_config(route_name='link_hit')
 	def hit(self):
-		return Response(status=302, location="http://www.example.com/")
+		print(self.request.path)
+		pathSplit = str.split(self.request.path, sep="/")
+		if(len(pathSplit) > 1):
+			short=pathSplit[1]
+
+			try:
+				link = DBSession.query(Link).filter_by(shorty=short).one()
+				print("It's a hit!")
+				return Response(status=302, location=link.url)
+			except NoResultFound:
+				print('No link found...')
+
+		return Response("No hit... (Sorry)")
 
 	@view_config(route_name='link_list', renderer='templates/link/list.mako')
 	def list(self):
