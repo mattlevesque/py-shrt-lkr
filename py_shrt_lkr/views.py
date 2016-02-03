@@ -155,16 +155,31 @@ class LinkViews(object):
 		link = DBSession.query(Link).filter_by(id=id).one()
 
 		schema = ShortLinkEdit()
-		form = deform.Form(schema, buttons=('submit',)).render(
-			{'id':link.id, 'description': link.description, 'url':link.url, 'shorty': ''})
+
+		form = deform.Form(schema, buttons=('submit',))
 
 		data = self.request.POST
 		if 'submit' in data:
-			print("Validation???")
+			controls = data.items()
+			try:
+				print('try')
+				self.link_form.validate(controls)
 
-		return {'data': "TEST", 'id': id, 'form':form}
+				#Save the data
+				link.description = data['description']
+				link.url = data['url']
+				transaction.commit()
+				#Refreshing the model
+				link = DBSession.query(Link).filter_by(id=id).one()
+
+			except deform.ValidationFailure as e:
+				print('except')
+				return {'data': '<h5>Bad entry... RETRY!!!</h5>', 'id': id, 'form': e.render()}
+
+		return {'data': "TEST", 'id': id, 'form':form.render({'id':link.id, 'description': link.description, 'url':link.url, 'shorty': ''})}
 	@view_config(route_name='link_delete')
 	def delete(self):
 		id = self.request.matchdict.get('id', None)
+
 		print("Deleting "+id+"?")
 		return Response(status=302, location=self.request.route_url("link_list"))
