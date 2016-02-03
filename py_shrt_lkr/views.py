@@ -180,6 +180,9 @@ class LinkViews(object):
 	@view_config(route_name='link_delete')
 	def delete(self):
 		id = self.request.matchdict.get('id', None)
+		link = DBSession.query(Link).filter_by(id=id).one()
 
-		print("Deleting "+id+"?")
+		DBSession.delete(link)
+		transaction.commit()
+
 		return Response(status=302, location=self.request.route_url("link_list"))
