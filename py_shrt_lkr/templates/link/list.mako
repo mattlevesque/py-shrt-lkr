@@ -1,6 +1,10 @@
 <%inherit file="../base/main.mako"/>
 <%block name="title">Link list</%block>
 
+<div class="subnavigation">
+    ${tags.Link("New link", url=request.route_url('link_create'))}
+</div>
+
 <%def name="buildrow(item, odd=True)">
     %if odd:
         <tr class="odd">

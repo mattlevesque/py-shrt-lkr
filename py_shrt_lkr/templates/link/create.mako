@@ -4,5 +4,3 @@
 <div>
 ${form|n}
 </div>
-
-${test|n}

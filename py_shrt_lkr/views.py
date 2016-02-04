@@ -114,9 +114,9 @@ class LinkViews(object):
 	@view_config(route_name='link_create', renderer='templates/link/create.mako')
 	def create(self):
 		print('link:create')
-		form = self.link_form.render()
+		form = self.link_form
 
-		print (self.request.params)
+		print(self.request.params)
 		print('submit' in self.request.POST)
 
 		data = self.request.POST
@@ -145,8 +145,10 @@ class LinkViews(object):
 				trans.commit()
 			print(self.request.POST['url'])
 
-			#return HTTPFound(self.request.route_url('link_list'))
-		return {'test': '<h5>TEST</h5>', 'form': form}
+			self.request.session.flash(u'The link has been created successfully')
+
+			return HTTPFound(self.request.route_url('link_list'))
+		return {'form': form.render()}
 
 	@view_config(route_name='link_edit', renderer='templates/link/edit.mako')
 	def edit(self):
@@ -176,7 +178,7 @@ class LinkViews(object):
 				print('except')
 				return {'data': '<h5>Bad entry... RETRY!!!</h5>', 'id': id, 'form': e.render()}
 
-		return {'data': "TEST", 'id': id, 'form':form.render({'id':link.id, 'description': link.description, 'url':link.url, 'shorty': ''})}
+		return {'id': id, 'form':form.render({'id':link.id, 'description': link.description, 'url':link.url, 'shorty': ''})}
 	@view_config(route_name='link_delete')
 	def delete(self):
 		id = self.request.matchdict.get('id', None)
@@ -184,5 +186,7 @@ class LinkViews(object):
 
 		DBSession.delete(link)
 		transaction.commit()
+
+		self.request.session.flash(u'The link has been deleted')
 
 		return Response(status=302, location=self.request.route_url("link_list"))
