@@ -1,6 +1,6 @@
 <html>
     <head>
-        <title><%block name="title" /></title>
+        <title><%block name="title" /> - ShrtLkr</title>
     </head>
     <body>
         <%block name="header">

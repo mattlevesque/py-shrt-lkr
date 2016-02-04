@@ -72,6 +72,9 @@ class ShortLinkEdit(ShortLink):
 			title=u'Short'
 		)
 
+def build_link(request, link):
+	return "http://0.0.0.0:6543/"+link.shorty
+
 
 from sqlalchemy.orm.exc import NoResultFound
 
@@ -178,7 +181,7 @@ class LinkViews(object):
 				print('except')
 				return {'data': '<h5>Bad entry... RETRY!!!</h5>', 'id': id, 'form': e.render()}
 
-		return {'id': id, 'form':form.render({'id':link.id, 'description': link.description, 'url':link.url, 'shorty': ''})}
+		return {'id': id, 'link': build_link(self.request, link), 'form':form.render({'id':link.id, 'description': link.description, 'url':link.url})}
 	@view_config(route_name='link_delete')
 	def delete(self):
 		id = self.request.matchdict.get('id', None)
