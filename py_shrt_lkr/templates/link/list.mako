@@ -14,6 +14,7 @@
         <td>${item.description}</td>
         <td>${item.url}</td>
         <td>${item.shorty}</td>
+        <td>${item.hitCount()}</td>
         <td>
             ${tags.Link("Edit", url=request.route_url('link_edit', id=item.id))} |
             ${tags.Link("Delete", url=request.route_url('link_delete', id=item.id))}

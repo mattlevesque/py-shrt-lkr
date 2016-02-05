@@ -18,6 +18,7 @@ from .models import (
 	DBSession,
 	MyModel,
 	Link,
+	LinkHit,
 )
 
 
@@ -101,6 +102,11 @@ class LinkViews(object):
 
 			try:
 				link = DBSession.query(Link).filter_by(shorty=short).one()
+
+				linkHit = LinkHit()
+				linkHit.link = link
+				DBSession.add(linkHit)
+
 				print("It's a hit!")
 				return Response(status=302, location=link.url)
 			except NoResultFound:
@@ -181,7 +187,7 @@ class LinkViews(object):
 				print('except')
 				return {'data': '<h5>Bad entry... RETRY!!!</h5>', 'id': id, 'form': e.render()}
 
-		return {'id': id, 'link': build_link(self.request, link), 'form':form.render({'id':link.id, 'description': link.description, 'url':link.url})}
+		return {'id': id, 'link': build_link(self.request, link), 'hits': link.hitCount(), 'form':form.render({'id':link.id, 'description': link.description, 'url':link.url})}
 	@view_config(route_name='link_delete')
 	def delete(self):
 		id = self.request.matchdict.get('id', None)
