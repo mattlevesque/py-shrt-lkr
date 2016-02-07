@@ -105,9 +105,13 @@ class LinkViews(object):
 
 				linkHit = LinkHit()
 				linkHit.link = link
+
+				#Set the referer
+				linkHit.referer = self.request.referer
+
 				DBSession.add(linkHit)
 
-				print("It's a hit!")
+				#print("It's a hit! from "+referer)
 				return Response(status=302, location=link.url)
 			except NoResultFound:
 				print('No link found...')

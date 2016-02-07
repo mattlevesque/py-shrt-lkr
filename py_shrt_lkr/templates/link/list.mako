@@ -21,7 +21,7 @@
         </td>
 </%def>
 
-<table class="paginator"><tr><th>Description</th><th>Link to</th><th>Shorty</th><th>Actions</th></tr>
+<table class="paginator"><tr><th>Description</th><th>Link to</th><th>Shorty</th><th>Hit count</th><th>Actions</th></tr>
 <% odd=False %>
 % for item in linkLst:
      ${buildrow(item, odd)}

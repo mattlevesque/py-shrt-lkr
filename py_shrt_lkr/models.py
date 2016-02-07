@@ -52,5 +52,6 @@ class LinkHit(Base):
 	__tablename__ = 'link_hit'
 	id = Column(Integer, Sequence('link_hit_id_seq'), primary_key=True)
 	link_id = Column(Integer, ForeignKey('link.id'))
-	date_stamp = Column(DateTime, default=datetime.now())
 	link = relationship("Link", back_populates="hits")
+	date_stamp = Column(DateTime, default=datetime.now())
+	referer = Column(String(1024))
