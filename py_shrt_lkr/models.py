@@ -41,14 +41,10 @@ class Link(Base):
 	description = Column(String(75))
 	shorty = Column(String(128))
 	url = Column(String(512))
+	hits = relationship("LinkHit", back_populates="link")
 
 	def hitCount(self):
-		hitCount = 0
-		try:
-			hitCount = DBSession.query(LinkHit).filter_by(link=self).count()
-		except:
-			hitCount=0
-		return hitCount
+		return len(self.hits)
 
 Index('link_shorty_index', Link.shorty, unique=True, mysql_length=255)
 
@@ -57,4 +53,4 @@ class LinkHit(Base):
 	id = Column(Integer, Sequence('link_hit_id_seq'), primary_key=True)
 	link_id = Column(Integer, ForeignKey('link.id'))
 	date_stamp = Column(DateTime, default=datetime.now())
-	link = relationship("Link")
+	link = relationship("Link", back_populates="hits")
