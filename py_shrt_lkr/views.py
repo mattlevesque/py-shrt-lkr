@@ -73,12 +73,22 @@ class ShortLink(colander.MappingSchema):
 			))
 
 
+#Todo : Fix a way to check for uniq constrains of the shorty
+@colander.deferred
+def uniq_shorty(node, value):
+	print("uniq shorty??? "+value)
+	raise colander.Invalid(node, 'Shorty already in use...')
+	return ''
+
+
 class ShortLinkEdit(ShortLink):
 	shorty = colander.SchemaNode(
 			colander.String(),
 			title=u'Shorty',
-			missing=''
-		)
+			missing=u'',
+			validator=uniq_shorty,
+	)
+
 
 def build_link(request, link):
 	return "http://0.0.0.0:6543/"+link.shorty
@@ -178,18 +188,19 @@ class LinkViews(object):
 				print('try')
 				self.link_form.validate(controls)
 
-				#Save the data
-				link.title = data['title']
-				link.description = data['description']
-				link.url = data['url']
-				link.shorty = data['short']
-				transaction.commit()
-				#Refreshing the model
-				link = DBSession.query(Link).filter_by(id=id).one()
-
 			except deform.ValidationFailure as e:
 				print('except')
 				return {'data': '<h5>Bad entry... RETRY!!!</h5>', 'id': id, 'form': e.render()}
+
+
+			#Save the data
+			link.title = data['title']
+			link.description = data['description']
+			link.url = data['url']
+			link.shorty = data['shorty']
+			transaction.commit()
+			#Refreshing the model
+			link = DBSession.query(Link).filter_by(id=id).one()
 
 		return {'id': id, 'link': build_link(self.request, link), 'hits': link.hitCount(), 'form':form.render({'id':link.id, 'title': link.title, 'description': link.description, 'shorty': link.shorty, 'url':link.url})}
 
