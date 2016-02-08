@@ -53,10 +53,15 @@ try it again.
 expr_url = re.compile(r"(?i)\b((?:[a-z][\w-]+:(?:/{1,3}|[a-z0-9%])|www\d{0,3}[.]|[a-z0-9.\-]+[.][a-z]{2,4}/)(?:[^\s()<>]+|\(([^\s()<>]+|(\([^\s()<>]+\)))*\))+(?:\(([^\s()<>]+|(\([^\s()<>]+\)))*\)|[^\s`!()\[\]{};:'\".,<>?«»“”‘’]))", re.IGNORECASE)
 
 class ShortLink(colander.MappingSchema):
+	title = \
+		colander.SchemaNode(
+			colander.String(),
+			validator=colander.Length(min=3, max=75, min_err=u'Shorter than minimum length of ${min}', max_err=u'Longer than maximum length ${max}'),
+		)
 	description = \
 		colander.SchemaNode(
 			colander.String(),
-			validator=colander.Length(min=3, max=50, min_err=u'Shorter than minimum length of ${min}', max_err=u'Longer than maximum length ${max}'),)
+			validator=colander.Length(min=3, max=512, min_err=u'Shorter than minimum length of ${min}', max_err=u'Longer than maximum length ${max}'),)
 	url = colander.SchemaNode(
 			colander.String(),
 			default="http://",
@@ -172,6 +177,7 @@ class LinkViews(object):
 				self.link_form.validate(controls)
 
 				#Save the data
+				link.title = data['title']
 				link.description = data['description']
 				link.url = data['url']
 				link.shorty = data['short']
@@ -183,7 +189,7 @@ class LinkViews(object):
 				print('except')
 				return {'data': '<h5>Bad entry... RETRY!!!</h5>', 'id': id, 'form': e.render()}
 
-		return {'id': id, 'link': build_link(self.request, link), 'hits': link.hitCount(), 'form':form.render({'id':link.id, 'description': link.description, 'short': link.shorty, 'url':link.url})}
+		return {'id': id, 'link': build_link(self.request, link), 'hits': link.hitCount(), 'form':form.render({'id':link.id, 'title': link.title, 'description': link.description, 'short': link.shorty, 'url':link.url})}
 	@view_config(route_name='link_delete')
 	def delete(self):
 		id = self.request.matchdict.get('id', None)

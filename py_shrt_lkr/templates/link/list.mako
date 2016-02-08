@@ -11,7 +11,7 @@
     %else:
         <tr class="even">
     % endif
-        <td>${item.description}</td>
+        <td>${item.title}</td>
         <td>${item.url}</td>
         <td>${item.shorty}</td>
         <td>${item.hitCount()}</td>
@@ -21,7 +21,7 @@
         </td>
 </%def>
 
-<table class="paginator"><tr><th>Description</th><th>Link to</th><th>Shorty</th><th>Hit count</th><th>Actions</th></tr>
+<table class="paginator"><tr><th>Title</th><th>Link to</th><th>Shorty</th><th>Hit count</th><th>Actions</th></tr>
 <% odd=False %>
 % for item in linkLst:
      ${buildrow(item, odd)}
