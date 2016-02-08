@@ -61,6 +61,7 @@ class ShortLink(colander.MappingSchema):
 	description = \
 		colander.SchemaNode(
 			colander.String(),
+			widget=deform.widget.TextAreaWidget(cols=20, rows=5),
 			validator=colander.Length(min=3, max=512, min_err=u'Shorter than minimum length of ${min}', max_err=u'Longer than maximum length ${max}'),)
 	url = colander.SchemaNode(
 			colander.String(),
@@ -73,9 +74,10 @@ class ShortLink(colander.MappingSchema):
 
 
 class ShortLinkEdit(ShortLink):
-	short = colander.SchemaNode(
+	shorty = colander.SchemaNode(
 			colander.String(),
-			title=u'Short'
+			title=u'Shorty',
+			missing=''
 		)
 
 def build_link(request, link):
@@ -189,7 +191,8 @@ class LinkViews(object):
 				print('except')
 				return {'data': '<h5>Bad entry... RETRY!!!</h5>', 'id': id, 'form': e.render()}
 
-		return {'id': id, 'link': build_link(self.request, link), 'hits': link.hitCount(), 'form':form.render({'id':link.id, 'title': link.title, 'description': link.description, 'short': link.shorty, 'url':link.url})}
+		return {'id': id, 'link': build_link(self.request, link), 'hits': link.hitCount(), 'form':form.render({'id':link.id, 'title': link.title, 'description': link.description, 'shorty': link.shorty, 'url':link.url})}
+
 	@view_config(route_name='link_delete')
 	def delete(self):
 		id = self.request.matchdict.get('id', None)
