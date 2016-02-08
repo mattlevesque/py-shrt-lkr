@@ -145,17 +145,8 @@ class LinkViews(object):
 			model = Link()
 			model.description = data['description']
 			model.url = data['url']
+			DBSession.add(model)
 
-			with transaction.manager as trans:
-				maxId=DBSession.execute(sqlalchemy.func.max(Link.id)).first()[0]
-				if maxId is None:
-					maxId=0
-				nextId = maxId+1
-				hashid = self.hash_gen.encode(nextId, int(round(time.time())))
-
-				model.shorty = hashid
-				DBSession.add(model)
-				trans.commit()
 			print(self.request.POST['url'])
 
 			self.request.session.flash(u'The link has been created successfully')
@@ -183,6 +174,7 @@ class LinkViews(object):
 				#Save the data
 				link.description = data['description']
 				link.url = data['url']
+				link.shorty = data['short']
 				transaction.commit()
 				#Refreshing the model
 				link = DBSession.query(Link).filter_by(id=id).one()
@@ -191,7 +183,7 @@ class LinkViews(object):
 				print('except')
 				return {'data': '<h5>Bad entry... RETRY!!!</h5>', 'id': id, 'form': e.render()}
 
-		return {'id': id, 'link': build_link(self.request, link), 'hits': link.hitCount(), 'form':form.render({'id':link.id, 'description': link.description, 'url':link.url})}
+		return {'id': id, 'link': build_link(self.request, link), 'hits': link.hitCount(), 'form':form.render({'id':link.id, 'description': link.description, 'short': link.shorty, 'url':link.url})}
 	@view_config(route_name='link_delete')
 	def delete(self):
 		id = self.request.matchdict.get('id', None)
