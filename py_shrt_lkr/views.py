@@ -53,6 +53,9 @@ try it again.
 expr_url = re.compile(r"(?i)\b((?:[a-z][\w-]+:(?:/{1,3}|[a-z0-9%])|www\d{0,3}[.]|[a-z0-9.\-]+[.][a-z]{2,4}/)(?:[^\s()<>]+|\(([^\s()<>]+|(\([^\s()<>]+\)))*\))+(?:\(([^\s()<>]+|(\([^\s()<>]+\)))*\)|[^\s`!()\[\]{};:'\".,<>?«»“”‘’]))", re.IGNORECASE)
 
 class ShortLink(colander.MappingSchema):
+	#Todo: Reevaluate this!
+	#The id is only used for the validation of the shorty and has to be included in the schema. The data gets
+	#overwritten so that the id can not be fiddle with in the actual form. (Quick solution for now...)
 	id = \
 		colander.SchemaNode(
 			colander.Integer(),
@@ -107,9 +110,6 @@ def full_form_validator(schema, form, value):
 		exc = colander.Invalid(form, u'Invalid shorty')
 		exc['shorty'] = u'The shorty "'+value['shorty']+'" has already been taken'
 		raise exc
-
-	print(qry)
-
 
 
 class ShortLinkEdit(ShortLink):
@@ -215,21 +215,13 @@ class LinkViews(object):
 
 		data = self.request.POST
 
-		#Create the models
-		model = {
-			'form': form.render({'id':link.id, 'title': link.title, 'description': link.description, 'shorty': link.shorty, 'url':link.url})
-		}
+		renderedForm = None
 		if 'submit' in data:
+			data['id'] = link.id
 			controls = data.items()
-			isValid=True
 			try:
 				form.validate(controls)
 
-			except deform.ValidationFailure as e:
-				model['form'] = e.render()
-				isValid=False
-
-			if isValid:
 				#Save the data
 				link.title = data['title']
 				link.description = data['description']
@@ -238,11 +230,20 @@ class LinkViews(object):
 				transaction.commit()
 				#Refreshing the model
 				link = DBSession.query(Link).filter_by(id=id).one()
+			except deform.ValidationFailure as e:
+				renderedForm = e.render()
 
+		if renderedForm is None:
+			renderedForm = form.render({'id':link.id, 'title': link.title, 'description': link.description, 'shorty': link.shorty, 'url':link.url})
 
-		model['id'] = id
-		model['link'] = build_link(self.request, link)
-		model['hits'] = link.hitCount()
+		#Create the models
+		model = {
+			'id': id,
+			'link': build_link(self.request, link),
+			'hits': link.hitCount(),
+			'form': renderedForm
+		}
+
 		return model
 
 	@view_config(route_name='link_delete')
