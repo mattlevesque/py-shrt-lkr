@@ -53,6 +53,12 @@ try it again.
 expr_url = re.compile(r"(?i)\b((?:[a-z][\w-]+:(?:/{1,3}|[a-z0-9%])|www\d{0,3}[.]|[a-z0-9.\-]+[.][a-z]{2,4}/)(?:[^\s()<>]+|\(([^\s()<>]+|(\([^\s()<>]+\)))*\))+(?:\(([^\s()<>]+|(\([^\s()<>]+\)))*\)|[^\s`!()\[\]{};:'\".,<>?«»“”‘’]))", re.IGNORECASE)
 
 class ShortLink(colander.MappingSchema):
+	id = \
+		colander.SchemaNode(
+			colander.Integer(),
+			widget=deform.widget.HiddenWidget(),
+			missing=u''
+		)
 	title = \
 		colander.SchemaNode(
 			colander.String(),
@@ -74,11 +80,36 @@ class ShortLink(colander.MappingSchema):
 
 
 #Todo : Fix a way to check for uniq constrains of the shorty
-@colander.deferred
 def uniq_shorty(node, value):
 	print("uniq shorty??? "+value)
+	print(DBSession.execute(DBSession.query(sqlalchemy.func.count(Link.id)).filter(Link.shorty==value)).first()[0])
 	raise colander.Invalid(node, 'Shorty already in use...')
-	return ''
+	#return ''
+
+def full_form_validator(schema, form, value):
+	qry=None
+	if value['id'] is not None and value['id']!='':
+		qry = DBSession\
+				.query(sqlalchemy.func.count(Link.id))\
+					.filter(Link.id!=value['id'])\
+					.filter(Link.shorty==value['shorty'])
+	else:
+		qry = DBSession\
+				.query(sqlalchemy.func.count(Link.id))\
+					.filter(Link.id==value['id'])
+	count=0
+	try:
+		count = DBSession.execute(qry).first()[0]
+	except:
+		raise colander.Invalid(form, u'An error has occured')
+
+	if count>0:
+		exc = colander.Invalid(form, u'Invalid shorty')
+		exc['shorty'] = u'The shorty "'+value['shorty']+'" has already been taken'
+		raise exc
+
+	print(qry)
+
 
 
 class ShortLinkEdit(ShortLink):
@@ -86,8 +117,9 @@ class ShortLinkEdit(ShortLink):
 			colander.String(),
 			title=u'Shorty',
 			missing=u'',
-			validator=uniq_shorty,
+			#validator=uniq_shorty,
 	)
+	validator=full_form_validator
 
 
 def build_link(request, link):
@@ -182,27 +214,36 @@ class LinkViews(object):
 		form = deform.Form(schema, buttons=('submit',))
 
 		data = self.request.POST
+
+		#Create the models
+		model = {
+			'form': form.render({'id':link.id, 'title': link.title, 'description': link.description, 'shorty': link.shorty, 'url':link.url})
+		}
 		if 'submit' in data:
 			controls = data.items()
+			isValid=True
 			try:
-				print('try')
-				self.link_form.validate(controls)
+				form.validate(controls)
 
 			except deform.ValidationFailure as e:
-				print('except')
-				return {'data': '<h5>Bad entry... RETRY!!!</h5>', 'id': id, 'form': e.render()}
+				model['form'] = e.render()
+				isValid=False
+
+			if isValid:
+				#Save the data
+				link.title = data['title']
+				link.description = data['description']
+				link.url = data['url']
+				link.shorty = data['shorty']
+				transaction.commit()
+				#Refreshing the model
+				link = DBSession.query(Link).filter_by(id=id).one()
 
 
-			#Save the data
-			link.title = data['title']
-			link.description = data['description']
-			link.url = data['url']
-			link.shorty = data['shorty']
-			transaction.commit()
-			#Refreshing the model
-			link = DBSession.query(Link).filter_by(id=id).one()
-
-		return {'id': id, 'link': build_link(self.request, link), 'hits': link.hitCount(), 'form':form.render({'id':link.id, 'title': link.title, 'description': link.description, 'shorty': link.shorty, 'url':link.url})}
+		model['id'] = id
+		model['link'] = build_link(self.request, link)
+		model['hits'] = link.hitCount()
+		return model
 
 	@view_config(route_name='link_delete')
 	def delete(self):
