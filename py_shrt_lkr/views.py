@@ -81,14 +81,6 @@ class ShortLink(colander.MappingSchema):
 				msg=u"Not valid URL"
 			))
 
-
-#Todo : Fix a way to check for uniq constrains of the shorty
-def uniq_shorty(node, value):
-	print("uniq shorty??? "+value)
-	print(DBSession.execute(DBSession.query(sqlalchemy.func.count(Link.id)).filter(Link.shorty==value)).first()[0])
-	raise colander.Invalid(node, 'Shorty already in use...')
-	#return ''
-
 def full_form_validator(schema, form, value):
 	qry=None
 	if value['id'] is not None and value['id']!='':
@@ -117,7 +109,6 @@ class ShortLinkEdit(ShortLink):
 			colander.String(),
 			title=u'Shorty',
 			missing=u'',
-			#validator=uniq_shorty,
 	)
 	validator=full_form_validator
 
