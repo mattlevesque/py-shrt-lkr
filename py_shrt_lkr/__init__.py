@@ -36,7 +36,7 @@ def main(global_config, **settings):
 
 	config.add_route('link_list', '/admin/link/')
 	config.add_route('link_create', '/admin/link/new')
-	config.add_route('link_edit', '/admin/link/edit/{id}')
+	config.add_route('link_edit', '/admin/link/{id}')
 	config.add_route('link_delete', '/admin/link/delete/{id}')
 
 	config.add_route('link_hit', '/{hashids}')
