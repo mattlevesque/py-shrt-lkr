@@ -207,7 +207,11 @@ class LinkViews(object):
 	def edit(self):
 		id = self.request.matchdict.get('id', None)
 
-		link = DBSession.query(Link).filter_by(id=id).one()
+		try:
+			link = DBSession.query(Link).filter_by(id=id).one()
+		except sqlalchemy.orm.exc.NoResultFound as e:
+			self.request.session.flash(u'No link found with the id %s'%id)
+			return Response(status=302, location=self.request.route_url("link_list"))
 
 		schema = ShortLinkEdit()
 
@@ -228,8 +232,8 @@ class LinkViews(object):
 				link.url = data['url']
 				link.shorty = data['shorty']
 				transaction.commit()
-				#Refreshing the model
-				link = DBSession.query(Link).filter_by(id=id).one()
+				#Refreshing the page
+				return Response(status=302, location=self.request.route_url("link_edit", id=id))
 			except deform.ValidationFailure as e:
 				renderedForm = e.render()
 
