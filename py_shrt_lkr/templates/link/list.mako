@@ -21,6 +21,7 @@
         </td>
 </%def>
 
+${quickCreateFrm|n}
 <table class="paginator"><tr><th>Title</th><th>Link to</th><th>Shorty</th><th>Hit count</th><th>Actions</th></tr>
 <% odd=False %>
 % for item in linkLst:

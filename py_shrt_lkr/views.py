@@ -162,7 +162,44 @@ class LinkViews(object):
 	def list(self):
 		linksLst = DBSession.query(Link)
 
-		return {'linkLst': linksLst}
+		class QuickCreateShortLink(colander.MappingSchema):
+			url = colander.SchemaNode(
+			colander.String(),
+			default="http://",
+			title=u'Url',
+			validator=colander.Regex(
+				expr_url,
+				msg=u"Not valid URL"
+			))
+
+
+		quick_create_frm = deform.Form(QuickCreateShortLink(), buttons=('submit',))
+
+		data = self.request.POST
+
+		quick_create_frm_rendered = None
+		if 'submit' in data:
+			controls = data.items()
+			try:
+				quick_create_frm.validate(controls)
+				link = Link()
+				#Save the data
+				link.title = 'Untitled'
+				link.url = data['url']
+
+				DBSession.add(link)
+				#Todo: Add redirect to the edit form
+				print("NEw link id : "+str(link.id))
+			except deform.ValidationFailure as e:
+				quick_create_frm_rendered = e.render()
+
+		if quick_create_frm_rendered is None:
+			quick_create_frm_rendered = quick_create_frm.render()
+
+		return {
+			'quickCreateFrm': quick_create_frm_rendered,
+			'linkLst': linksLst,
+		}
 
 	@view_config(route_name='link_create', renderer='templates/link/create.mako')
 	def create(self):
