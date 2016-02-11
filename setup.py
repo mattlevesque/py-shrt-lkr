@@ -21,6 +21,7 @@ requires = [
 	'colander',
 	'deform',
 	'WebHelpers2',
+	'lxml',
 ]
 
 setup(

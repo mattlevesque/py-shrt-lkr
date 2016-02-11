@@ -6,6 +6,7 @@ import transaction
 import time
 from pyramid.httpexceptions import HTTPFound
 from hashids import Hashids
+import lxml.html
 
 from pyramid.response import Response
 from pyramid.view import view_config
@@ -172,7 +173,6 @@ class LinkViews(object):
 				msg=u"Not valid URL"
 			))
 
-
 		quick_create_frm = deform.Form(QuickCreateShortLink(), buttons=('submit',))
 
 		data = self.request.POST
@@ -184,8 +184,17 @@ class LinkViews(object):
 				quick_create_frm.validate(controls)
 				link = Link()
 				#Save the data
-				link.title = 'Untitled'
 				link.url = data['url']
+
+				#Set the title
+				link.title = 'Untitled'
+				try:
+					link.title = lxml.html.parse(data['url']).find(".//title").text
+				except:
+					#Todo: Fix the SSL not working part....
+					#http://www.webtop.com.au/blog/compiling-python-with-ssl-support-fedora-10-2009020237
+					#Log error
+					print ('Could not get the title of the page/url.')
 
 				DBSession.add(link)
 				#Todo: Add redirect to the edit form
