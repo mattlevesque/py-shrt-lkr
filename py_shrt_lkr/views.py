@@ -196,9 +196,13 @@ class LinkViews(object):
 					#Log error
 					print ('Could not get the title of the page/url.')
 
-				DBSession.add(link)
-				#Todo: Add redirect to the edit form
-				print("NEw link id : "+str(link.id))
+				created_id = 0
+				with transaction.manager as trans:
+					DBSession.add(link)
+					created_id = DBSession.execute(sqlalchemy.func.max(Link.id)).first()[0]
+
+				if created_id > 0 :
+					return HTTPFound(self.request.route_url('link_edit', id=created_id))
 			except deform.ValidationFailure as e:
 				quick_create_frm_rendered = e.render()
 
