@@ -20,6 +20,7 @@ from .models import (
 	MyModel,
 	Link,
 	LinkHit,
+	Tag,
 )
 
 
@@ -81,6 +82,13 @@ class ShortLink(colander.MappingSchema):
 				expr_url,
 				msg=u"Not valid URL"
 			))
+	tags = colander.SchemaNode(
+			colander.String(),
+			widget=deform.widget.TextInputWidget(css_class='tagit'),
+			id='tags',
+			missing=u''
+			)
+
 
 def full_form_validator(schema, form, value):
 	qry=None
@@ -263,6 +271,7 @@ class LinkViews(object):
 		renderedForm = None
 		if 'submit' in data:
 			data['id'] = link.id
+
 			controls = data.items()
 			try:
 				form.validate(controls)
@@ -272,6 +281,15 @@ class LinkViews(object):
 				link.description = data['description']
 				link.url = data['url']
 				link.shorty = data['shorty']
+
+
+				print("Tags len : "+str(len(data['tags'])))
+
+				if len(data['tags'])>0:
+					link.tags = list(map(lambda x: Tag(name=x), data['tags'].split(',')))
+				else:
+					link.tags = []
+
 				transaction.commit()
 				#Refreshing the page
 				return Response(status=302, location=self.request.route_url("link_edit", id=id))
@@ -279,7 +297,14 @@ class LinkViews(object):
 				renderedForm = e.render()
 
 		if renderedForm is None:
-			renderedForm = form.render({'id':link.id, 'title': link.title, 'description': link.description, 'shorty': link.shorty, 'url':link.url})
+			#renderedForm = form.render({'id':link.id, 'title': link.title, 'description': link.description, 'shorty': link.shorty, 'tags': ','.join(map(lambda x: x.name, link.tags)), 'url':link.url})
+			renderedForm = form.render({
+				'id':link.id,
+				'title': link.title,
+				'description': link.description,
+				'shorty': link.shorty,
+				'tags': ','.join(map(lambda x: x.name, link.tags)),
+				'url':link.url})
 
 		#Create the models
 		model = {

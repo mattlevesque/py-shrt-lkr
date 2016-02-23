@@ -10,6 +10,7 @@ from sqlalchemy import (
 	Text,
 	Sequence,
 	String,
+	Table,
 )
 from sqlalchemy.orm import relationship
 from sqlalchemy.event import listen
@@ -44,6 +45,11 @@ class MyModel(Base):
 
 Index('my_index', MyModel.name, unique=True, mysql_length=255)
 
+link_tag_association_table = Table('link_tag', Base.metadata,
+    Column('link_id', Integer, ForeignKey('link.id')),
+    Column('tag_id', Integer, ForeignKey('tag.id'))
+)
+
 class Link(Base):
 	__tablename__ = 'link'
 	#id = Column(Integer, Sequence('link_id_seq'), primary_key=True)
@@ -53,6 +59,10 @@ class Link(Base):
 	shorty = Column(String(128))
 	url = Column(String(512))
 	hits = relationship("LinkHit", back_populates="link")
+	tags =relationship(
+        "Tag",
+        secondary=link_tag_association_table
+	)
 
 	def hitCount(self):
 		return len(self.hits)
@@ -81,3 +91,11 @@ class LinkHit(Base):
 	link = relationship("Link", back_populates="hits")
 	date_stamp = Column(DateTime, default=datetime.now())
 	referer = Column(String(1024))
+
+
+class Tag(Base):
+	__tablename__ = 'tag'
+	id = Column(Integer, Sequence('tag_id_seq'), primary_key=True)
+	name = Column(String(64))
+
+
