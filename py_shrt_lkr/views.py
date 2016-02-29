@@ -8,6 +8,10 @@ from pyramid.httpexceptions import HTTPFound
 from hashids import Hashids
 import lxml.html
 
+from .helpers import (
+	list_diff
+)
+
 from pyramid.response import Response
 from pyramid.view import view_config
 
@@ -15,12 +19,17 @@ from sqlalchemy.exc import DBAPIError
 
 from sqlalchemy import Sequence
 
+
 from .models import (
 	DBSession,
 	MyModel,
+)
+
+
+from .core.models import (
 	Link,
 	LinkHit,
-	Tag,
+	Tag
 )
 
 
@@ -282,11 +291,39 @@ class LinkViews(object):
 				link.url = data['url']
 				link.shorty = data['shorty']
 
-
-				print("Tags len : "+str(len(data['tags'])))
-
 				if len(data['tags'])>0:
-					link.tags = list(map(lambda x: Tag(name=x), data['tags'].split(',')))
+					#link.tags = list(map(lambda x: Tag(name=x), data['tags'].split(',')))
+
+					print("Tags len : "+str(len(data['tags'])))
+					formTags = data['tags'].split(',')
+					currentTagLst = list(map(lambda x: x.name, link.tags))
+
+					newTags = list_diff(currentTagLst, formTags)
+					deletedTags = list_diff(formTags, currentTagLst)
+
+					#Delete the removed tags
+					if len(deletedTags)>0:
+						delIndx=list(map(lambda x: currentTagLst.index(x), deletedTags))
+						delIndx.sort()
+						delIndx.reverse()
+						print("Del indx "+str(delIndx))
+						for indx in delIndx:
+							print("Remove indx : %d"%indx)
+							link.tags.pop(indx)
+
+					#Insert the new tags
+					if len(newTags)>0:
+						for tagName in newTags:
+							tag = None
+							try:
+								tag=DBSession.query(Tag).filter_by(name=tagName).one()
+							except NoResultFound:
+								#If not found we create it
+								tag=Tag(name=tagName)
+							link.tags.append(tag)
+
+					print ('The new tags are '+str(newTags))
+					print ('The deleted tags are '+str(deletedTags))
 				else:
 					link.tags = []
 

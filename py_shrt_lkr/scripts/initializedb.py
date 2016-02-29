@@ -15,6 +15,9 @@ from ..models import (
 	DBSession,
 	MyModel,
 	Base,
+)
+
+from ..core.models import (
 	Link,
 	Tag,
 )
@@ -43,5 +46,5 @@ def main(argv=sys.argv):
 		link.description = "First link"
 		link.url = "https://www.google.ca/search?q=python+pyramid"
 		# model = MyModel(name='one', value=1)
-		link.tags = [Tag(name="Test"), Tag(name="GGggg rrr")]
+		link.tags = [Tag(name="Programming"), Tag(name="Python")]
 		DBSession.add(link)
