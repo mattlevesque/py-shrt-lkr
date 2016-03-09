@@ -27,10 +27,9 @@ class LinkService(object):
 			self.dbsession.add(link)
 			created_id = self.dbsession.execute(sqlalchemy.func.max(Link.id)).first()[0]
 
-	def edit_link(self, id, name=None, title=None, description=None, shorty = None, url = None, tags=None):
-		link = self.get_link_by_id(id)
-
+	def edit_link(self, id, name=None, title=None, description=None, shorty=None, url=None, tags=None):
 		with transaction.manager:
+			link = self.get_link_by_id(id)
 			link.title = title
 			link.description = description
 			link.shorty = shorty
@@ -38,8 +37,14 @@ class LinkService(object):
 
 			currentTagLst = list(map(lambda x: x.name, link.tags))
 
+			formTags = tags.split(',')
 			newTags = list_diff(currentTagLst, formTags)
 			deletedTags = list_diff(formTags, currentTagLst)
+
+			#print("Tags : "+tags)
+			#print("Cur : "+str(currentTagLst))
+			#print("New : "+str(newTags))
+			#print("Del : "+str(deletedTags))
 
 			#Delete the removed tags
 			if len(deletedTags)>0:
@@ -61,6 +66,8 @@ class LinkService(object):
 						#If not found we create it
 						tag=Tag(name=tagName)
 					link.tags.append(tag)
+
+			transaction.commit()
 
 	def get_link_by_id(self, id):
 		try:

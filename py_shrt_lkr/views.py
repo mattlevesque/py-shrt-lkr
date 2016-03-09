@@ -25,6 +25,11 @@ from .models import (
 	MyModel,
 )
 
+from .core.services import (
+	LinkService
+)
+
+
 
 from .core.models import (
 	Link,
@@ -141,6 +146,8 @@ class LinkViews(object):
 	def __init__(self, request):
 		self.request = request
 		self.hash_gen = Hashids(salt="I fart in your general direction!")
+
+		self.link_service = LinkService(DBSession)
 
 	@property
 	def link_form(self, schema=ShortLink()):
@@ -265,9 +272,9 @@ class LinkViews(object):
 	def edit(self):
 		id = self.request.matchdict.get('id', None)
 
-		try:
-			link = DBSession.query(Link).filter_by(id=id).one()
-		except sqlalchemy.orm.exc.NoResultFound as e:
+
+		link = self.link_service.get_link_by_id(id)
+		if link == None:
 			self.request.session.flash(u'No link found with the id %s'%id)
 			return Response(status=302, location=self.request.route_url("link_list"))
 
@@ -285,49 +292,16 @@ class LinkViews(object):
 			try:
 				form.validate(controls)
 
+
 				#Save the data
-				link.title = data['title']
-				link.description = data['description']
-				link.url = data['url']
-				link.shorty = data['shorty']
+				self.link_service.edit_link(
+					data['id'],
+					title=data['title'],
+					description=data['description'],
+					url=data['url'],
+					shorty=data['shorty'],
+					tags=data['tags'])
 
-				if len(data['tags'])>0:
-					#link.tags = list(map(lambda x: Tag(name=x), data['tags'].split(',')))
-
-					print("Tags len : "+str(len(data['tags'])))
-					formTags = data['tags'].split(',')
-					currentTagLst = list(map(lambda x: x.name, link.tags))
-
-					newTags = list_diff(currentTagLst, formTags)
-					deletedTags = list_diff(formTags, currentTagLst)
-
-					#Delete the removed tags
-					if len(deletedTags)>0:
-						delIndx=list(map(lambda x: currentTagLst.index(x), deletedTags))
-						delIndx.sort()
-						delIndx.reverse()
-						print("Del indx "+str(delIndx))
-						for indx in delIndx:
-							print("Remove indx : %d"%indx)
-							link.tags.pop(indx)
-
-					#Insert the new tags
-					if len(newTags)>0:
-						for tagName in newTags:
-							tag = None
-							try:
-								tag=DBSession.query(Tag).filter_by(name=tagName).one()
-							except NoResultFound:
-								#If not found we create it
-								tag=Tag(name=tagName)
-							link.tags.append(tag)
-
-					print ('The new tags are '+str(newTags))
-					print ('The deleted tags are '+str(deletedTags))
-				else:
-					link.tags = []
-
-				transaction.commit()
 				#Refreshing the page
 				return Response(status=302, location=self.request.route_url("link_edit", id=id))
 			except deform.ValidationFailure as e:
@@ -356,10 +330,8 @@ class LinkViews(object):
 	@view_config(route_name='link_delete')
 	def delete(self):
 		id = self.request.matchdict.get('id', None)
-		link = DBSession.query(Link).filter_by(id=id).one()
 
-		DBSession.delete(link)
-		transaction.commit()
+		self.link_service.delete_link(id)
 
 		self.request.session.flash(u'The link has been deleted')
 
