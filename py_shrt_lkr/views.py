@@ -21,9 +21,10 @@ from sqlalchemy import Sequence
 
 
 from .models import (
-	DBSession,
 	MyModel,
 )
+
+from .core.models import DBSession
 
 from .core.services import (
 	LinkService
