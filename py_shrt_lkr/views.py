@@ -207,7 +207,6 @@ class LinkViews(object):
 			controls = data.items()
 			try:
 				quick_create_frm.validate(controls)
-				#link = Link()
 				#Save the data
 				url = data['url']
 
@@ -222,13 +221,11 @@ class LinkViews(object):
 					print ('Could not get the title of the page/url.')
 
 				created_id = self.link_service.create_link(url=url, title=title)
-				#with transaction.manager as trans:
-				#	DBSession.add(link)
-				#	trans.commit()
-				#	created_id = DBSession.execute(sqlalchemy.func.max(Link.id)).first()[0]
 
 				if created_id > 0 :
 					return HTTPFound(self.request.route_url('link_edit', id=created_id))
+				else:
+					self.request.session.flash(u'A problem has happened creating your link. Try again later')
 			except deform.ValidationFailure as e:
 				quick_create_frm_rendered = e.render()
 
