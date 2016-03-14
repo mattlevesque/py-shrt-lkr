@@ -7,7 +7,7 @@ import pyramid.url as url
 from pyramid.session import SignedCookieSessionFactory
 
 
-from .models import (
+from .core.models.base import (
 	DBSession,
 	Base,
 )

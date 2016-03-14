@@ -28,8 +28,10 @@ from zope.sqlalchemy import ZopeTransactionExtension
 
 from hashids import Hashids
 
-DBSession = scoped_session(sessionmaker(extension=ZopeTransactionExtension()))
-Base = declarative_base()
+from py_shrt_lkr.core.models import Base
+
+'''DBSession = scoped_session(sessionmaker(extension=ZopeTransactionExtension()))
+Base = declarative_base()'''
 
 # Hashids Generator
 def hashid_generator(id):
