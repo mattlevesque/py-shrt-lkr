@@ -20,12 +20,14 @@ from py_shrt_lkr.helpers import (
 class LinkService(object):
 	def __init__(self, dbsession):
 		self.dbsession = dbsession
-	def create_link(self, url, name=None, title=None, description=None):
-		link = Link(url=url, name=name, title=title, description=description)
+	def create_link(self, url, title=None, description=None):
+		link = Link(url=url, title=title, description=description)
 
 		with transaction.manager:
 			self.dbsession.add(link)
+			transaction.commit()
 			created_id = self.dbsession.execute(sqlalchemy.func.max(Link.id)).first()[0]
+		return created_id
 
 	def edit_link(self, id, name=None, title=None, description=None, shorty=None, url=None, tags=None):
 		with transaction.manager:

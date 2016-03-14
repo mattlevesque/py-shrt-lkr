@@ -155,7 +155,7 @@ class LinkViews(object):
 		return deform.Form(schema, buttons=('submit',))
 
 	@property
-	def reqts(self):
+	def reqts000(self):
 		return self.link_form.get_widget_resources()
 
 	@view_config(route_name='link_hit')
@@ -206,24 +206,25 @@ class LinkViews(object):
 			controls = data.items()
 			try:
 				quick_create_frm.validate(controls)
-				link = Link()
+				#link = Link()
 				#Save the data
-				link.url = data['url']
+				url = data['url']
 
 				#Set the title
-				link.title = 'Untitled'
+				title = 'Untitled'
 				try:
-					link.title = lxml.html.parse(data['url']).find(".//title").text
+					title = lxml.html.parse(data['url']).find(".//title").text
 				except:
 					#Todo: Fix the SSL not working part....
 					#http://www.webtop.com.au/blog/compiling-python-with-ssl-support-fedora-10-2009020237
 					#Log error
 					print ('Could not get the title of the page/url.')
 
-				created_id = 0
-				with transaction.manager as trans:
-					DBSession.add(link)
-					created_id = DBSession.execute(sqlalchemy.func.max(Link.id)).first()[0]
+				created_id = self.link_service.create_link(url=url, title=title)
+				#with transaction.manager as trans:
+				#	DBSession.add(link)
+				#	trans.commit()
+				#	created_id = DBSession.execute(sqlalchemy.func.max(Link.id)).first()[0]
 
 				if created_id > 0 :
 					return HTTPFound(self.request.route_url('link_edit', id=created_id))
