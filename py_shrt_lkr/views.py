@@ -7,6 +7,8 @@ import time
 from pyramid.httpexceptions import HTTPFound
 from hashids import Hashids
 import lxml.html
+import urllib.request
+
 
 from .helpers import (
 	list_diff
@@ -213,7 +215,8 @@ class LinkViews(object):
 				#Set the title
 				title = 'Untitled'
 				try:
-					title = lxml.html.parse(data['url']).find(".//title").text
+					data=urllib.request.urlopen(data['url'])
+					title = lxml.html.parse(data).find(".//title").text
 				except:
 					#Todo: Fix the SSL not working part....
 					#http://www.webtop.com.au/blog/compiling-python-with-ssl-support-fedora-10-2009020237
