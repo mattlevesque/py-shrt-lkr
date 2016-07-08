@@ -4,7 +4,7 @@ import sqlalchemy
 
 from sqlalchemy.orm.exc import NoResultFound
 
-from ..models.links import (
+from ..models.user import (
 	User
 )
 
