@@ -13,7 +13,11 @@ class UserService(object):
 		self.dbsession = dbsession
 
 	def create(self, user = None):
-		return -1
+
+		self.dbsession.add(user)
+		self.dbsession.merge(user)
+
+		return user
 
 	def update(self, user = None):
 		with transaction.manager:
