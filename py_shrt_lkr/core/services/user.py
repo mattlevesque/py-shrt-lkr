@@ -29,4 +29,9 @@ class UserService(object):
 		return -1
 
 	def getById(self, id = None):
-		return -1
+		q=self.dbsession.query(User).filter(User.id == id)
+		return q.first()
+	def validateLogin(self, screenName = None, password = None):
+		q=self.dbsession.query(User).filter(User.screeName==screenName, User.password==password)
+		ret=self.dbsession.query(q.exists()).scalar()
+		return ret

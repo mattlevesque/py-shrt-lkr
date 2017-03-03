@@ -1,5 +1,6 @@
 import unittest
 import transaction
+import random
 
 from pyramid import testing
 
@@ -34,4 +35,20 @@ class TestServiceUserSuccessCondition(unittest.TestCase):
 			ret = self.user_srv.create(user)
 
 			print("Return : "+str(ret.id)+" "+str(ret.firstName))
-		self.assertEqual(self.user_srv.getById(77), -10, "Yup that works")
+
+		x = self.user_srv.getById(7);
+		randomId=random.choice(range(0,10))
+		self.assertEqual(self.user_srv.getById(randomId).firstName, "test "+str(randomId-1), "User found")
+	def test_user_login(self):
+		screenname="User-passtst"
+		passwd="ZeePassWordz"
+
+		user=User()
+		user.screeName=screenname
+		user.password=passwd
+
+		self.user_srv.create(user)
+		# Validate good password
+		self.assertEqual(self.user_srv.validateLogin(screenname, passwd), True, "Login successful")
+		# Validate bad password
+		self.assertEqual(self.user_srv.validateLogin(screenname, "Wrong PASS"), False, "Login fail pass success")
