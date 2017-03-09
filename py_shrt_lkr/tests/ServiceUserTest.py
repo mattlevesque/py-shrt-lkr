@@ -27,14 +27,18 @@ class TestServiceUserSuccessCondition(unittest.TestCase):
 
 		for x in range(0,10):
 			user = User()
-			user.firstName = "test "+str(x)
-			user.lastName = "ing"
-			user.email = "test@hotmail.com"
-			user.screeName = "testing user"
+			firstName = "test "+str(x)
+			lastName = "ing"
+			email = "test"+str(x)+"@hotmail.com"
+			screeName = "testing user "+str(x)
+			password = "TTT"
 
-			ret = self.user_srv.create(user)
+			try:
+				ret = self.user_srv.create(screeName, email, firstName, lastName, password)
+				print("Return : "+str(ret.id)+" "+str(ret.firstName))
+			except:
+				pass
 
-			print("Return : "+str(ret.id)+" "+str(ret.firstName))
 
 		x = self.user_srv.getById(7);
 		randomId=random.choice(range(0,10))
@@ -47,7 +51,7 @@ class TestServiceUserSuccessCondition(unittest.TestCase):
 		user.screeName=screenname
 		user.password=passwd
 
-		self.user_srv.create(user)
+		self.user_srv.create(screenname, None, None, None, passwd)
 		# Validate good password
 		self.assertEqual(self.user_srv.validateLogin(screenname, passwd), True, "Login successful")
 		# Validate bad password
