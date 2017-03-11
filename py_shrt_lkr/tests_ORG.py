@@ -68,5 +68,5 @@ class TestServiceUserSuccessCondition(unittest.TestCase):
 	def test_failing_view(self):
 		from .core.services import UserService
 		print("TEST")
-		self.assertEqual(UserService.getById(77), -10, "Yup that works")
+		self.assertEqual(UserService.get_by_id(77), -10, "Yup that works")
 

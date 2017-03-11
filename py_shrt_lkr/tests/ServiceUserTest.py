@@ -38,18 +38,14 @@ class TestServiceUserSuccessCondition(unittest.TestCase):
 				pass
 
 		random_id=random.choice(range(0,10))
-		self.assertEqual(self.user_srv.getById(random_id).firstName, "test "+str(random_id-1), "User found")
+		self.assertEqual(self.user_srv.get_by_id(random_id).firstName, "test " + str(random_id - 1), "User found")
 
 	def test_user_login(self):
 		screen_name="User-passtst"
 		passwd="ZeePassWordz"
 
-		user=User()
-		user.screeName=screen_name
-		user.password=passwd
-
-		self.user_srv.create(screen_name, None, None, None, passwd)
+		self.user_srv.create(screen_name, "test@hotmail.com", None, None, passwd)
 		# Validate good password
-		self.assertEqual(self.user_srv.validateLogin(screen_name, passwd), True, "Login successful")
+		self.assertEqual(self.user_srv.validate_login(screen_name, passwd), True, "Login successful")
 		# Validate bad password
-		self.assertEqual(self.user_srv.validateLogin(screen_name, "Wrong PASS"), False, "Login fail pass success")
+		self.assertEqual(self.user_srv.validate_login(screen_name, "Wrong PASS"), False, "Login fail pass success")
