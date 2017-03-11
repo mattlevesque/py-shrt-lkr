@@ -12,6 +12,9 @@ from ..models.user import (
 class UserErrors(Exception):
 	pass
 
+class UserNotFount(Exception):
+	pass
+
 class UserCreationError(UserErrors):
 	def __init__(self, message=None):
 		self.message = message
@@ -41,29 +44,32 @@ class UserService(object):
 		return user
 
 	def update(self, id, screenName=None, email=None, firstName=None, lastName=None, password=None):
+		user = self.getById(id).first()
+		if user is None:
+			raise UserNotFount()
+
 		with transaction.manager:
-			user = self.getById(id).first()
-			if user!=None:
-				user.screeName=screenName
-				user.email=email
-				user.firstName = firstName
-				user.lastName = lastName
-				user.password = password
-				transaction.commit()
-				return 0
-		return 1
+			user.screeName=screenName
+			user.email=email
+			user.firstName = firstName
+			user.lastName = lastName
+			user.password = password
+			transaction.commit()
+			return user
 
-	def delete(self, user = None):
-		if user != None:
-			with transaction.manager:
-				self.dbsession.delete(user)
-				transaction.commit()
-		return 1
+	def delete(self, id):
+		user=self.getById(id)
+		if user is None:
+			raise UserNotFount()
 
-	def getById(self, id = None):
-		q=self.dbsession.query(User).filter(User.id == id)
-		return q.first()
-	def validateLogin(self, screenName = None, password = None):
-		q=self.dbsession.query(User).filter(User.screeName==screenName, User.password==password)
-		ret=self.dbsession.query(q.exists()).scalar()
-		return ret
+		self.dbsession.delete(user)
+		self.dbsession.commit()
+
+	def getById(self, id=None):
+		return self.dbsession.query(User)\
+			.filter(User.id == id).first()
+
+	def validateLogin(self, screenName=None, password=None):
+		qry=self.dbsession.query(User)\
+			.filter(User.screeName == screenName, User.password == password)
+		return self.dbsession.query(qry.exists()).scalar()
