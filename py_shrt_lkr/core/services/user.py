@@ -29,4 +29,5 @@ class UserService(object):
 		return -1
 
 	def getById(self, id = None):
-		return -1
+		qry = self.dbsession.query(User).filter(User.id==id)
+		return qry.first()
